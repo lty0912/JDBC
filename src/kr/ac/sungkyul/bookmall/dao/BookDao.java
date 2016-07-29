@@ -31,21 +31,20 @@ public class BookDao {
 			stmt = conn.createStatement();
 
 			// 4. SQL문 실행
-			String sql = "SELECT no, title, rate, author_no FROM BOOK ORDER BY no ASC";
+			String sql = "SELECT a.title, b.name, a.status FROM BOOK a, AUTHOR b WHERE a.author_no = b.no ORDER BY a.no";
 			rs = stmt.executeQuery(sql);
 			
 			// 5. 결과처리
 			while (rs.next()) {
-				Long no = rs.getLong(1);
-				String title = rs.getString(2);
-				Integer rate = rs.getInt(3);
-				Long authorNo = rs.getLong(4);
+				String title = rs.getString(1);
+				String authorName = rs.getString(2);
+				Integer status = rs.getInt(3);
 
 				BookVo vo = new BookVo();
-				vo.setNo(no);
-				vo.setTitle(title);
-				vo.setRate(rate);
-				vo.setAuthorNo(authorNo);
+				
+				vo.setTitle(title);				
+				vo.setAuthorName(authorName);				
+				vo.setStatus(status);	
 				
 				list.add(vo);
 			}
@@ -86,13 +85,14 @@ public class BookDao {
 			conn = DriverManager.getConnection(url, "skudb", "skudb");
 
 			// 3. statement 준비
-			String sql = "INSERT into book values(seq_book.nextval, ?, ?, ?)";
+			String sql = "INSERT into book values(seq_book.nextval, ?, ?, ?, ?)";
 			pstmt = conn.prepareStatement(sql);
 
 			// 4. 바인딩
 			pstmt.setString(1, vo.getTitle());
-			pstmt.setInt(2, vo.getRate());
-			pstmt.setLong(3, 1);	// 일단 1로 맞춤
+			pstmt.setInt(2, vo.getRate());			
+			pstmt.setInt(3, vo.getStatus());
+			pstmt.setLong(4, vo.getAuthorNo());
 			
 			// 5. query 실행			
 			count = pstmt.executeUpdate();	//갯수를 반환			
@@ -114,6 +114,52 @@ public class BookDao {
 		return count;
 	}
 	
+	
+	
+	public void rent(Integer no) {
+		Connection conn = null;
+		PreparedStatement pstmt = null;
+		int count=0;
+		try {
+			//1. 드라이버 로딩
+			Class.forName( "oracle.jdbc.driver.OracleDriver" );
+
+			//2. Connection 얻어오기
+			String url = "jdbc:oracle:thin:@localhost:1521:xe";
+			conn = DriverManager.getConnection( url, "skudb", "skudb" );
+
+			//3. SQL 준비
+			String sql = "update book set status=1 where no = ?";
+			pstmt = conn.prepareStatement(sql);
+			
+			//4. 바인딩
+			pstmt.setInt( 1, no );
+			
+			//5. SQL 실행
+			count = pstmt.executeUpdate();
+			
+			System.out.println(count + "권의 책을 빌렸습니다.");
+			
+		} catch( ClassNotFoundException e ) {
+			System.out.println( "드라이버를 찾을 수 없습니다.: " + e  );
+		} catch( SQLException e ) {
+			System.out.println( "에러 : " + e );
+		} finally {
+			try {
+				if( pstmt != null ) {
+					pstmt.close();
+				}
+				
+				if( conn != null ) {
+					conn.close();
+				}
+			} catch( SQLException e ) {
+				System.out.println( "에러 : " + e );
+			}
+		}
+		
+		
+	}
 	
 	
 	

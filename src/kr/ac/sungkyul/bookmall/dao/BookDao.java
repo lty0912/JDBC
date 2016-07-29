@@ -9,7 +9,6 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
-import kr.ac.sungkyul.bookmall.vo.AuthorVo;
 import kr.ac.sungkyul.bookmall.vo.BookVo;
 
 public class BookDao {
@@ -119,6 +118,7 @@ public class BookDao {
 	public void rent(Integer no) {
 		Connection conn = null;
 		PreparedStatement pstmt = null;
+		ResultSet rs = null;
 		int count=0;
 		try {
 			//1. 드라이버 로딩
@@ -129,7 +129,7 @@ public class BookDao {
 			conn = DriverManager.getConnection( url, "skudb", "skudb" );
 
 			//3. SQL 준비
-			String sql = "update book set status=1 where no = ?";
+			String sql = "update book set status=1 where no = ? ";
 			pstmt = conn.prepareStatement(sql);
 			
 			//4. 바인딩
@@ -138,7 +138,12 @@ public class BookDao {
 			//5. SQL 실행
 			count = pstmt.executeUpdate();
 			
-			System.out.println(count + "권의 책을 빌렸습니다.");
+			sql = "SELECT title FROM BOOK WHERE no=?";
+			pstmt = conn.prepareStatement(sql);
+			pstmt.setInt( 1, no );
+			rs = pstmt.executeQuery();
+			rs.next();
+			System.out.println(rs.getString(1) + "(가) 대여됐습니다.");
 			
 		} catch( ClassNotFoundException e ) {
 			System.out.println( "드라이버를 찾을 수 없습니다.: " + e  );
